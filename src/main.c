@@ -5,7 +5,7 @@ static TextLayer *s_time_layer;
 static Layer *s_battery_layer;
 static BitmapLayer *s_ship_layer;
 
-static int s_battery_level;
+static int s_battery_percent;
 
 static GBitmap *ship_bitmap;
 
@@ -13,8 +13,7 @@ static void battery_update_proc(Layer *layer, GContext *ctx)
 {
   GRect bounds = layer_get_bounds(layer);
 
-  float battery_percent = (float)(((float)s_battery_level / 100.0F) * 114.0F);
-  int width = (int)battery_percent;
+  int width = (int)(float)(((float)s_battery_percent / 100.0F) * bounds.size.w);
 
   // Draw the background
   graphics_context_set_fill_color(ctx, GColorBlack);
@@ -22,11 +21,11 @@ static void battery_update_proc(Layer *layer, GContext *ctx)
   
   // choose color based on remaining battery
   #ifdef PBL_COLOR
-    if(battery_percent >= 60)
+    if(s_battery_percent >= 60)
     {
       graphics_context_set_fill_color(ctx, GColorIslamicGreen);
     }
-    else if(battery_percent > 30 && battery_percent < 60)
+    else if(s_battery_percent > 30 && s_battery_percent < 60)
     {
       graphics_context_set_fill_color(ctx, GColorOrange);
     }
@@ -72,10 +71,8 @@ static void main_window_load(Window *window)
   
   
   // Battery layer
-  //s_battery_layer = layer_create(GRect(14, 54, 115, 2));
   s_battery_layer = layer_create(GRect(image_frame.origin.x, image_frame.origin.y + image_size.h + 10, image_size.w, 8));
   layer_set_update_proc(s_battery_layer, battery_update_proc);
-  layer_mark_dirty(s_battery_layer);
   layer_add_child(window_layer, s_battery_layer);
   
   
@@ -100,7 +97,8 @@ static void main_window_unload(Window *window)
 
 static void battery_callback(BatteryChargeState state) 
 {
-  s_battery_level = state.charge_percent;
+  s_battery_percent = state.charge_percent;
+  layer_mark_dirty(s_battery_layer);
 }
 
 static void update_time() 

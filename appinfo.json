@@ -4,13 +4,14 @@
         ""
     ],
     "companyName": "zougouda@gmail.com",
-    "enableMultiJS": false,
+    "enableMultiJS": true,
     "longName": "SupInSpace Watchface",
     "projectType": "native",
     "resources": {
         "media": [
             {
                 "file": "images/spaceship.png",
+                "menuIcon": true,
                 "name": "ship_1",
                 "targetPlatforms": null,
                 "type": "bitmap"
@@ -27,6 +28,6 @@
     "uuid": "7a742a04-79d1-4f05-8316-62ff372fcc9e",
     "versionLabel": "1.0",
     "watchapp": {
-        "watchface": false
+        "watchface": true
     }
 }
