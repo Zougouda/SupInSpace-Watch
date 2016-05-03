@@ -4,14 +4,13 @@
         ""
     ],
     "companyName": "zougouda@gmail.com",
-    "enableMultiJS": true,
+    "enableMultiJS": false,
     "longName": "SupInSpace Watchface",
     "projectType": "native",
     "resources": {
         "media": [
             {
                 "file": "images/spaceship.png",
-                "menuIcon": true,
                 "name": "ship_1",
                 "targetPlatforms": null,
                 "type": "bitmap"
@@ -19,14 +18,14 @@
         ]
     },
     "sdkVersion": "3",
-    "shortName": "SupInSpace Watchface",
+    "shortName": "SupInSpace",
     "targetPlatforms": [
         "aplite",
         "basalt",
         "chalk"
     ],
     "uuid": "7a742a04-79d1-4f05-8316-62ff372fcc9e",
-    "versionLabel": "1.0",
+    "versionLabel": "1.1",
     "watchapp": {
         "watchface": true
     }

@@ -5,7 +5,7 @@ static TextLayer *s_time_layer;
 static Layer *s_battery_layer;
 static BitmapLayer *s_ship_layer;
 
-static int s_battery_percent;
+static int s_battery_level;
 
 static GBitmap *ship_bitmap;
 
@@ -13,19 +13,16 @@ static void battery_update_proc(Layer *layer, GContext *ctx)
 {
   GRect bounds = layer_get_bounds(layer);
 
-  int width = (int)(float)(((float)s_battery_percent / 100.0F) * bounds.size.w);
-
-  // Draw the background
-  graphics_context_set_fill_color(ctx, GColorBlack);
-  graphics_fill_rect(ctx, bounds, 0, GCornerNone);
+  float battery_percent = (float)s_battery_level;
+  int width = (int)(((float)battery_percent / 100.0F) * bounds.size.w);
   
   // choose color based on remaining battery
   #ifdef PBL_COLOR
-    if(s_battery_percent >= 60)
+    if(battery_percent >= 60)
     {
       graphics_context_set_fill_color(ctx, GColorIslamicGreen);
     }
-    else if(s_battery_percent > 30 && s_battery_percent < 60)
+    else if(battery_percent > 30 && battery_percent < 60)
     {
       graphics_context_set_fill_color(ctx, GColorOrange);
     }
@@ -51,7 +48,6 @@ static void main_window_load(Window *window)
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);  
   GPoint center = grect_center_point(&bounds);
-  //center.y += 20;
   
   ship_bitmap = gbitmap_create_with_resource(RESOURCE_ID_ship_1);
   GSize image_size = gbitmap_get_bounds(ship_bitmap).size;
@@ -80,7 +76,6 @@ static void main_window_load(Window *window)
   s_time_layer = text_layer_create(
       GRect(0, PBL_IF_ROUND_ELSE(0, 0), bounds.size.w, 40)
   );
-
   text_layer_set_background_color(s_time_layer, GColorBlack);
   text_layer_set_text_color(s_time_layer, GColorWhite);
   text_layer_set_text(s_time_layer, "00:00");
@@ -92,12 +87,12 @@ static void main_window_load(Window *window)
 
 static void main_window_unload(Window *window) 
 {
-
+  layer_destroy(s_battery_layer);
 }
 
 static void battery_callback(BatteryChargeState state) 
 {
-  s_battery_percent = state.charge_percent;
+  s_battery_level = state.charge_percent;
   layer_mark_dirty(s_battery_layer);
 }
 
@@ -132,13 +127,13 @@ static void init()
     .unload = main_window_unload
   });
   
-  tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
-  
-  battery_state_service_subscribe(battery_callback);
-  battery_callback(battery_state_service_peek());
+  tick_timer_service_subscribe(MINUTE_UNIT, tick_handler); // time update
+  battery_state_service_subscribe(battery_callback); // battery update
   
   window_stack_push(s_main_window, true);
-  update_time();
+  
+  update_time(); // time init
+  battery_callback(battery_state_service_peek()); // battery init
 }
 
 static void deinit() 
