@@ -10,6 +10,12 @@
     "resources": {
         "media": [
             {
+                "file": "images/bt-icon.png",
+                "name": "BLUETOOTH_ICON",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
                 "file": "images/spaceship.png",
                 "name": "ship_1",
                 "targetPlatforms": null,
@@ -25,7 +31,7 @@
         "chalk"
     ],
     "uuid": "7a742a04-79d1-4f05-8316-62ff372fcc9e",
-    "versionLabel": "1.1",
+    "versionLabel": "1.2",
     "watchapp": {
         "watchface": true
     }

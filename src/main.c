@@ -3,11 +3,19 @@
 static Window *s_main_window;
 static TextLayer *s_time_layer;
 static Layer *s_battery_layer;
-static BitmapLayer *s_ship_layer;
+static BitmapLayer *s_ship_layer, *s_bt_layer;
 
 static int s_battery_level;
 
-static GBitmap *ship_bitmap;
+static GBitmap *s_ship_bitmap, *s_bt_bitmap;
+
+static void bluetooth_callback(bool connected) 
+{
+  layer_set_hidden(bitmap_layer_get_layer(s_bt_layer), connected); // Show icon if disconnected
+
+  if(!connected)
+    vibes_double_pulse();
+}
 
 static void battery_callback(BatteryChargeState state) 
 {
@@ -77,8 +85,8 @@ static void main_window_load(Window *window)
   GPoint center = grect_center_point(&bounds);
   
   // Ship layer
-  ship_bitmap = gbitmap_create_with_resource(RESOURCE_ID_ship_1);
-  GSize image_size = gbitmap_get_bounds(ship_bitmap).size;
+  s_ship_bitmap = gbitmap_create_with_resource(RESOURCE_ID_ship_1);
+  GSize image_size = gbitmap_get_bounds(s_ship_bitmap).size;
   GRect image_frame = GRect(center.x, center.y, image_size.w, image_size.h);
   image_frame.origin.y += 10;
   image_frame.origin.x -= image_size.w / 2;
@@ -86,7 +94,19 @@ static void main_window_load(Window *window)
   s_ship_layer = bitmap_layer_create(image_frame);
   bitmap_layer_set_background_color(s_ship_layer, GColorClear);
   bitmap_layer_set_compositing_mode(s_ship_layer, GCompOpSet);
-  bitmap_layer_set_bitmap(s_ship_layer, ship_bitmap);
+  bitmap_layer_set_bitmap(s_ship_layer, s_ship_bitmap);
+  
+  // Bluetooth layer
+  s_bt_bitmap = gbitmap_create_with_resource(RESOURCE_ID_BLUETOOTH_ICON);
+  GSize bt_image_size = gbitmap_get_bounds(s_bt_bitmap).size;
+  GRect bt_image_frame = GRect(center.x, center.y, bt_image_size.w, bt_image_size.h);
+  bt_image_frame.origin.x -= bt_image_size.w / 2;
+  bt_image_frame.origin.y -= bt_image_size.h / 2;
+  bt_image_frame.origin.y += 25;
+  s_bt_layer = bitmap_layer_create(bt_image_frame);
+  bitmap_layer_set_background_color(s_bt_layer, GColorClear);
+  bitmap_layer_set_compositing_mode(s_bt_layer, GCompOpSet);
+  bitmap_layer_set_bitmap(s_bt_layer, s_bt_bitmap);
   
   // Battery layer
   s_battery_layer = layer_create(GRect(image_frame.origin.x, image_frame.origin.y + image_size.h + 10, image_size.w, 8));
@@ -104,12 +124,15 @@ static void main_window_load(Window *window)
   layer_add_child(window_layer, bitmap_layer_get_layer(s_ship_layer));
   layer_add_child(window_layer, s_battery_layer);
   layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
+  layer_add_child(window_layer, bitmap_layer_get_layer(s_bt_layer));
   
   update_time(); // time init
   battery_callback(battery_state_service_peek()); // battery init
+  bluetooth_callback(connection_service_peek_pebble_app_connection()); //bluetooth init
   
   tick_timer_service_subscribe(MINUTE_UNIT, tick_handler); // time update
   battery_state_service_subscribe(battery_callback); // battery update
+  connection_service_subscribe((ConnectionHandlers) {.pebble_app_connection_handler = bluetooth_callback}); // bluetooth update
 }
 
 static void main_window_unload(Window *window) 
@@ -121,6 +144,7 @@ static void main_window_unload(Window *window)
   layer_destroy(s_battery_layer);
   text_layer_destroy(s_time_layer);
   bitmap_layer_destroy(s_ship_layer);
+  bitmap_layer_destroy(s_bt_layer);
 }
 
 static void init() 
