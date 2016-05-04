@@ -1,7 +1,7 @@
 #include <pebble.h>
 
 static Window *s_main_window;
-static TextLayer *s_time_layer;
+static TextLayer *s_time_layer, *s_date_layer;
 static Layer *s_battery_layer;
 static BitmapLayer *s_ship_layer, *s_bt_layer;
 
@@ -29,14 +29,17 @@ static void update_time()
   time_t temp = time(NULL);
   struct tm *tick_time = localtime(&temp);
 
-  // Write the current hours and minutes into a buffer
+  // Write hours and minutes
   static char s_buffer[8];
   strftime(s_buffer, sizeof(s_buffer), 
            clock_is_24h_style() ? "%H:%M" : "%I:%M", 
            tick_time);
-
-  // Display this time on the TextLayer
   text_layer_set_text(s_time_layer, s_buffer);
+  
+  // Write date
+  static char date_buffer[16];
+  strftime(date_buffer, sizeof(date_buffer), "%a %d %b", tick_time);
+  text_layer_set_text(s_date_layer, date_buffer);
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) 
@@ -120,10 +123,19 @@ static void main_window_load(Window *window)
   text_layer_set_font(s_time_layer, fonts_get_system_font(FONT_KEY_LECO_32_BOLD_NUMBERS));
   text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
   
+  // Date layer
+  s_date_layer = text_layer_create(GRect(0, PBL_IF_ROUND_ELSE(35, 35), bounds.size.w, 15));
+  text_layer_set_background_color(s_date_layer, GColorBlack);
+  text_layer_set_text_color(s_date_layer, GColorWhite);
+  text_layer_set_text(s_date_layer, "");
+  text_layer_set_font(s_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+  text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
+  
   // create all layers
   layer_add_child(window_layer, bitmap_layer_get_layer(s_ship_layer));
   layer_add_child(window_layer, s_battery_layer);
   layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
+  layer_add_child(window_layer, text_layer_get_layer(s_date_layer));
   layer_add_child(window_layer, bitmap_layer_get_layer(s_bt_layer));
   
   update_time(); // time init
@@ -143,6 +155,7 @@ static void main_window_unload(Window *window)
   
   layer_destroy(s_battery_layer);
   text_layer_destroy(s_time_layer);
+  text_layer_destroy(s_date_layer);
   bitmap_layer_destroy(s_ship_layer);
   bitmap_layer_destroy(s_bt_layer);
 }
